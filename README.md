@@ -192,7 +192,7 @@ src/
 
 ## Requirements
 
-- Node.js >= 14.0.0
+- Node.js >= 18.0.0
 - Linux or macOS (Might work on Windows, didn't test)
 
 ## License
