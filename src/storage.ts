@@ -15,7 +15,7 @@ export interface TOTPEntry {
 }
 
 export class StorageManager {
-  private static readonly CONFIG_DIR = path.join(os.homedir(), '.totp-cli');
+  private static readonly CONFIG_DIR = path.join(os.homedir(), '.totp-client');
   private static readonly CONFIG_FILE = path.join(StorageManager.CONFIG_DIR, 'secrets.json');
   private static readonly KEY_FILE = path.join(StorageManager.CONFIG_DIR, 'key.bin');
   private static encryptionKey: Buffer | null = null;

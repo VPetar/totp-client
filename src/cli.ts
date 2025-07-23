@@ -15,7 +15,7 @@ import chalk from 'chalk';
 const program = new Command();
 
 program
-  .name('totp-cli')
+  .name('totp-client')
   .description('CLI tool for generating TOTP (Time-based One-Time Password) codes')
   .version(pkg.version);
 

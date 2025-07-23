@@ -30,8 +30,8 @@ totp-client
 
 ```bash
 # Clone the repository
-git clone https://github.com/VPetar/totp-cli.git
-cd totp-cli
+git clone https://github.com/VPetar/totp-client.git
+cd totp-client
 
 # Install dependencies
 npm install
@@ -51,7 +51,7 @@ Launch the interactive interface that works just like Google Authenticator:
 
 ```bash
 # If installed globally via NPM
-totp-cli
+totp-client
 
 # If running from source
 npm start
@@ -72,7 +72,7 @@ npm start -- interactive
 Generate TOTP from a secret:
 ```bash
 # Global installation
-totp-cli generate "JBSWY3DPEHPK3PXP"
+totp-client generate "JBSWY3DPEHPK3PXP"
 # From source
 npm start -- generate "JBSWY3DPEHPK3PXP"
 ```
@@ -80,7 +80,7 @@ npm start -- generate "JBSWY3DPEHPK3PXP"
 Store a TOTP secret:
 ```bash
 # Global installation
-totp-cli add "github" "JBSWY3DPEHPK3PXP" --issuer "GitHub"
+totp-client add "github" "JBSWY3DPEHPK3PXP" --issuer "GitHub"
 # From source
 npm start -- add "github" "JBSWY3DPEHPK3PXP" --issuer "GitHub"
 ```
@@ -88,7 +88,7 @@ npm start -- add "github" "JBSWY3DPEHPK3PXP" --issuer "GitHub"
 List stored secrets:
 ```bash
 # Global installation
-totp-cli list
+totp-client list
 # From source
 npm start -- list
 ```
@@ -96,7 +96,7 @@ npm start -- list
 Generate TOTP from stored secret:
 ```bash
 # Global installation
-totp-cli get "github"
+totp-client get "github"
 # From source
 npm start -- get "github"
 ```
@@ -104,7 +104,7 @@ npm start -- get "github"
 Remove a stored secret:
 ```bash
 # Global installation
-totp-cli remove "github"
+totp-client remove "github"
 # From source
 npm start -- remove "github"
 ```
@@ -112,7 +112,7 @@ npm start -- remove "github"
 Get help:
 ```bash
 # Global installation
-totp-cli --help
+totp-client --help
 # From source
 npm start -- --help
 ```
@@ -175,8 +175,8 @@ src/
 
 - **Unique Encryption Keys**: Each installation generates a unique 32-byte encryption key
 - **AES-256-CTR Encryption**: Secrets are encrypted using AES-256-CTR before storage
-- **Secure Key Storage**: Encryption key stored in `~/.totp-cli/key.bin` with 600 permissions (owner read/write only)
-- **Configuration Security**: Configuration files stored in `~/.totp-cli/` directory
+- **Secure Key Storage**: Encryption key stored in `~/.ent/key.bin` with 600 permissions (owner read/write only)
+- **Configuration Security**: Configuration files stored in `~/.totp-client/` directory
 - **Keytar Integration**: Includes keytar for secure system keychain integration (fallback to encrypted file storage)
 
 ## Dependencies

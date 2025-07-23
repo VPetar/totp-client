@@ -3,7 +3,7 @@
 ## Before Publishing
 
 ### GitHub Setup
-- [ ] Create a new repository on GitHub (e.g., `vpetar/totp-cli`)
+- [ ] Create a new repository on GitHub (e.g., `vpetar/totp-client`)
 - [ ] Update package.json with your actual GitHub username
 - [ ] Initialize git repository and push to GitHub:
   ```bash
@@ -11,7 +11,7 @@
   git add .
   git commit -m "Initial commit: TOTP CLI with interactive interface"
   git branch -M main
-  git remote add origin https://github.com/vpetar/totp-cli.git
+  git remote add origin https://github.com/vpetar/totp-client.git
   git push -u origin main
   ```
 
@@ -19,7 +19,7 @@
 - [ ] Create an NPM account at npmjs.com if you don't have one
 - [ ] Login to NPM: `npm login`
 - [ ] Verify your email if required
-- [ ] Check package name availability: `npm view totp-cli` (should return 404)
+- [ ] Check package name availability: `npm view totp-client` (should return 404)
 
 ### Pre-publish Checks
 - [ ] Test build: `npm run build`
@@ -58,18 +58,18 @@ git push --tags
 ## Post-publish
 
 - [ ] Verify package on npmjs.com
-- [ ] Test global installation: `npm install -g totp-cli`
+- [ ] Test global installation: `npm install -g totp-client`
 - [ ] Update README.md with installation instructions
 - [ ] Create GitHub release with changelog
 - [ ] Share with community (Reddit, Twitter, etc.)
 
 ## Package Info
 
-- **Name**: totp-cli
+- **Name**: totp-client
 - **Current Version**: 1.0.0
 - **License**: MIT
 - **Author**: freeze.988@gmail.com
-- **Repository**: https://github.com/VPetar/totp-cli
+- **Repository**: https://github.com/VPetar/totp-client
 
 ## Notes
 
