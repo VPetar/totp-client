@@ -4,6 +4,7 @@
 
 import inquirer from 'inquirer';
 import chalk from 'chalk';
+import { default as clipboardy } from 'clipboardy';
 import { StorageManager } from './storage';
 import { TOTPManager } from './totpManager';
 
@@ -72,6 +73,13 @@ export class InteractiveUI {
     let isRunning = true;
     let currentCode = '';
     let timeRemaining = 0;
+    let lastCopyTime = 0;
+
+    // Set up raw mode for keyboard input
+    if (process.stdin.isTTY) {
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
+    }
 
     const updateDisplay = () => {
       try {
@@ -83,7 +91,7 @@ export class InteractiveUI {
         
         // Header
         console.log(chalk.cyan.bold('🔐 TOTP Live Display'));
-        console.log(chalk.gray('Press Ctrl+C to exit\n'));
+        console.log(chalk.gray('Press Ctrl+C to exit, "c" to copy code to clipboard\n'));
         
         // Secret name
         console.log(chalk.blue.bold(`📱 ${secretName}`));
@@ -95,8 +103,15 @@ export class InteractiveUI {
         const progressBar = InteractiveUI.createProgressBar(timeRemaining, 30);
         console.log(`\n⏱️  ${progressBar} ${timeRemaining}s`);
         
+        // Show copy confirmation if recently copied
+        const now = Date.now();
+        if (now - lastCopyTime < 2000) {
+          console.log(chalk.green.bold('\n📋 ✅ Code copied to clipboard!'));
+        }
+        
         // Instructions
         console.log(chalk.gray('\n💡 This code refreshes automatically every 30 seconds'));
+        console.log(chalk.gray('   Press "c" to copy code to clipboard'));
         console.log(chalk.gray('   Press Ctrl+C to return to menu'));
         
       } catch (error) {
@@ -104,6 +119,39 @@ export class InteractiveUI {
         isRunning = false;
       }
     };
+
+    // Handle keyboard input
+    const keyPressHandler = async (data: Buffer) => {
+      const key = data.toString();
+      
+      // Handle Ctrl+C (ASCII 3)
+      if (data[0] === 3) {
+        isRunning = false;
+        InteractiveUI.stopLiveDisplay();
+        console.log(chalk.yellow('\n👋 Returning to main menu...'));
+        
+        // Show the selector again
+        setTimeout(async () => {
+          await InteractiveUI.showSecretSelector();
+        }, 500);
+        return;
+      }
+      
+      // Handle 'c' key for copy
+      if (key.toLowerCase() === 'c') {
+        try {
+          await clipboardy.write(currentCode);
+          lastCopyTime = Date.now();
+          updateDisplay(); // Refresh display to show copy confirmation
+        } catch (error) {
+          console.log(chalk.red('\n❌ Failed to copy to clipboard:'), error);
+        }
+      }
+    };
+
+    if (process.stdin.isTTY) {
+      process.stdin.on('data', keyPressHandler);
+    }
 
     // Initial display
     updateDisplay();
@@ -117,16 +165,10 @@ export class InteractiveUI {
       updateDisplay();
     }, 1000);
 
-    // Handle Ctrl+C gracefully
+    // Handle process termination gracefully
     const exitHandler = () => {
       isRunning = false;
       InteractiveUI.stopLiveDisplay();
-      console.log(chalk.yellow('\n👋 Returning to main menu...'));
-      
-      // Show the selector again
-      setTimeout(async () => {
-        await InteractiveUI.showSecretSelector();
-      }, 500);
     };
 
     process.once('SIGINT', exitHandler);
@@ -145,7 +187,14 @@ export class InteractiveUI {
     // Show cursor again
     process.stdout.write('\x1B[?25h');
     
-    // Remove the exit handlers to prevent multiple calls
+    // Restore normal stdin mode
+    if (process.stdin.isTTY && process.stdin.setRawMode) {
+      process.stdin.setRawMode(false);
+      process.stdin.pause();
+    }
+    
+    // Remove all event listeners
+    process.stdin.removeAllListeners('data');
     process.removeAllListeners('SIGINT');
     process.removeAllListeners('SIGTERM');
   }

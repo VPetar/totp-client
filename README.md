@@ -47,10 +47,11 @@ totp-cli
 
 **Interactive Features:**
 - 📱 **Live TOTP Display**: Real-time codes with countdown timer
-- 🎯 **Arrow Key Navigation**: Select secrets with up/down arrows
+- 🎯 **Arrow Key Navigation**: Select secrets with up/down arrows  
 - 📊 **Progress Bar**: Visual countdown to next code refresh
 - 🔄 **Auto-refresh**: Codes update automatically every 30 seconds
 - 🎨 **Color-coded Timer**: Green → Yellow → Red as time runs out
+- 📋 **Clipboard Support**: Press 'c' to copy current code to clipboard (Ubuntu/macOS)
 
 ### Command Line Mode
 
@@ -102,7 +103,7 @@ npm start -- --help
 ### Interactive Mode
 ```
 🔐 TOTP Live Display
-Press Ctrl+C to exit
+Press Ctrl+C to exit, "c" to copy code to clipboard
 
 📱 github
 
@@ -110,7 +111,10 @@ Press Ctrl+C to exit
 
 ⏱️  [████████████████░░░░] 27s
 
+📋 ✅ Code copied to clipboard!
+
 💡 This code refreshes automatically every 30 seconds
+   Press "c" to copy code to clipboard
    Press Ctrl+C to return to menu
 ```
 
@@ -145,6 +149,7 @@ src/
 - **commander** - CLI argument parsing
 - **inquirer** - Interactive command line interfaces
 - **chalk** - Terminal colors and styling
+- **clipboardy** - Cross-platform clipboard support
 - **otplib** - TOTP generation and verification
 - **fs-extra** - Enhanced file system operations
 - **keytar** - Secure system keychain access
