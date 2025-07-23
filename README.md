@@ -1,5 +1,13 @@
 # TOTP CLI
 
+![npm](https://img.shields.io/npm/v/totp-client)
+![npm downloads](https://img.shields.io/npm/dt/totp-client)
+![License](https://img.shields.io/npm/l/totp-client)
+![Node.js Version](https://img.shields.io/node/v/totp-client)
+![GitHub stars](https://img.shields.io/github/stars/VPetar/totp-client)
+![GitHub issues](https://img.shields.io/github/issues/VPetar/totp-client)
+![GitHub last commit](https://img.shields.io/github/last-commit/VPetar/totp-client)
+
 A command-line interface for generating Time-based One-Time Passwords (TOTP) for two-factor authentication with an interactive Google Authenticator-style interface.
 
 ## Features
