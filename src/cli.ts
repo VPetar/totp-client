@@ -8,6 +8,8 @@ import { Command } from 'commander';
 import * as pkg from '../package.json';
 import { TOTPManager } from './totpManager';
 import { StorageManager } from './storage';
+import { InteractiveUI } from './interactive';
+import chalk from 'chalk';
 
 // Set up the CLI program
 const program = new Command();
@@ -17,6 +19,20 @@ program
   .description('CLI tool for generating TOTP (Time-based One-Time Password) codes')
   .version(pkg.version);
 
+// Interactive mode - default when no command is provided
+program
+  .command('interactive')
+  .alias('i')
+  .description('Launch interactive mode with live TOTP display')
+  .action(async () => {
+    try {
+      await InteractiveUI.showMainMenu();
+    } catch (error) {
+      console.error(chalk.red('Error in interactive mode:'), error);
+      process.exit(1);
+    }
+  });
+
 // Generate TOTP from a secret
 program
   .command('generate <secret>')
@@ -25,10 +41,10 @@ program
     try {
       const code = TOTPManager.generateTOTP(secret);
       const timeRemaining = TOTPManager.getTimeRemaining();
-      console.log(`TOTP Code: ${code}`);
-      console.log(`Time remaining: ${timeRemaining}s`);
+      console.log(chalk.green(`🔢 TOTP Code: ${chalk.bold(code)}`));
+      console.log(chalk.blue(`⏱️  Time remaining: ${timeRemaining}s`));
     } catch (error) {
-      console.error('Error generating TOTP:', error);
+      console.error(chalk.red('❌ Error generating TOTP:'), error);
       process.exit(1);
     }
   });
@@ -41,9 +57,9 @@ program
   .action(async (name: string, secret: string, options: { issuer?: string }) => {
     try {
       await StorageManager.storeSecret(name, secret, options.issuer);
-      console.log(`Successfully added TOTP secret for: ${name}`);
+      console.log(chalk.green(`✅ Successfully added TOTP secret for: ${chalk.bold(name)}`));
     } catch (error) {
-      console.error('Error storing TOTP secret:', error);
+      console.error(chalk.red('❌ Error storing TOTP secret:'), error);
       process.exit(1);
     }
   });
@@ -56,16 +72,21 @@ program
     try {
       const secrets = await StorageManager.getAllSecrets();
       if (secrets.length === 0) {
-        console.log('No TOTP secrets found.');
+        console.log(chalk.yellow('📭 No TOTP secrets found.'));
+        console.log(chalk.gray('💡 Use "add" command to store your first TOTP secret.'));
         return;
       }
       
-      console.log('Stored TOTP secrets:');
+      console.log(chalk.cyan.bold('📋 Stored TOTP secrets:'));
       secrets.forEach((entry, index) => {
-        console.log(`${index + 1}. ${entry.name}${entry.issuer ? ` (${entry.issuer})` : ''}`);
+        const number = chalk.gray(`${index + 1}.`);
+        const name = chalk.green.bold(entry.name);
+        const issuer = entry.issuer ? chalk.gray(` (${entry.issuer})`) : '';
+        console.log(`${number} ${name}${issuer}`);
       });
+      console.log(chalk.gray('\n💡 Use "interactive" mode for live TOTP codes!'));
     } catch (error) {
-      console.error('Error listing TOTP secrets:', error);
+      console.error(chalk.red('❌ Error listing TOTP secrets:'), error);
       process.exit(1);
     }
   });
@@ -78,16 +99,38 @@ program
     try {
       const secret = await StorageManager.getSecret(name);
       if (!secret) {
-        console.error(`TOTP secret not found: ${name}`);
+        console.error(chalk.red(`❌ TOTP secret not found: ${name}`));
+        console.log(chalk.gray('💡 Use "list" command to see available secrets.'));
         process.exit(1);
       }
       
       const code = TOTPManager.generateTOTP(secret);
       const timeRemaining = TOTPManager.getTimeRemaining();
-      console.log(`TOTP Code for ${name}: ${code}`);
-      console.log(`Time remaining: ${timeRemaining}s`);
+      console.log(chalk.green(`🔢 TOTP Code for ${chalk.bold(name)}: ${chalk.bold(code)}`));
+      console.log(chalk.blue(`⏱️  Time remaining: ${timeRemaining}s`));
+      console.log(chalk.gray('💡 Use "watch <name>" for live updates!'));
     } catch (error) {
-      console.error('Error generating TOTP:', error);
+      console.error(chalk.red('❌ Error generating TOTP:'), error);
+      process.exit(1);
+    }
+  });
+
+// Watch a specific secret with live updates
+program
+  .command('watch <name>')
+  .description('Watch a specific TOTP secret with live updates')
+  .action(async (name: string) => {
+    try {
+      const secret = await StorageManager.getSecret(name);
+      if (!secret) {
+        console.error(chalk.red(`❌ TOTP secret not found: ${name}`));
+        console.log(chalk.gray('💡 Use "list" command to see available secrets.'));
+        process.exit(1);
+      }
+      
+      await InteractiveUI.showLiveTOTP(name);
+    } catch (error) {
+      console.error(chalk.red('❌ Error watching TOTP:'), error);
       process.exit(1);
     }
   });
@@ -100,16 +143,28 @@ program
     try {
       const removed = await StorageManager.removeSecret(name);
       if (removed) {
-        console.log(`Successfully removed TOTP secret: ${name}`);
+        console.log(chalk.green(`✅ Successfully removed TOTP secret: ${chalk.bold(name)}`));
       } else {
-        console.error(`TOTP secret not found: ${name}`);
+        console.error(chalk.red(`❌ TOTP secret not found: ${name}`));
         process.exit(1);
       }
     } catch (error) {
-      console.error('Error removing TOTP secret:', error);
+      console.error(chalk.red('❌ Error removing TOTP secret:'), error);
       process.exit(1);
     }
   });
+
+// Default action when no command is provided - launch interactive mode
+program.action(async () => {
+  try {
+    console.log(chalk.cyan.bold('🔐 Welcome to TOTP CLI!'));
+    console.log(chalk.gray('Launching interactive mode...\n'));
+    await InteractiveUI.showMainMenu();
+  } catch (error) {
+    console.error(chalk.red('Error launching interactive mode:'), error);
+    process.exit(1);
+  }
+});
 
 // Parse command line arguments
 program.parse();

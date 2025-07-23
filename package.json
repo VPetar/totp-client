@@ -32,12 +32,15 @@
   ],
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.8",
     "@types/node": "^24.1.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "chalk": "^5.4.1",
     "commander": "^14.0.0",
     "fs-extra": "^11.3.0",
+    "inquirer": "^12.8.2",
     "keytar": "^7.9.0",
     "otplib": "^12.0.1"
   }
