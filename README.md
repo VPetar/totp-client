@@ -20,10 +20,10 @@ Install globally via NPM:
 
 ```bash
 # Install globally
-npm install -g totp-cli
+npm install -g totp-client
 
 # Run anywhere
-totp-cli
+totp-client
 ```
 
 ### From Source
