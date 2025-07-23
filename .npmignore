@@ -1,0 +1,48 @@
+# Source files
+src/
+tsconfig.json
+
+# Development files
+.github/
+.vscode/
+.gitignore
+.npmignore
+
+# Documentation for development
+CONTRIBUTING.md
+CHANGELOG.md
+
+# Test files
+test/
+tests/
+__tests__/
+*.test.js
+*.test.ts
+*.spec.js
+*.spec.ts
+
+# Development dependencies
+.eslintrc*
+.prettierrc*
+jest.config.*
+.nyc_output/
+coverage/
+
+# IDE and editor files
+.idea/
+*.swp
+*.swo
+*~
+
+# Local development
+.env*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts (keep dist/ for publishing)
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db

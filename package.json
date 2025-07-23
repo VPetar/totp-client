@@ -1,17 +1,33 @@
 {
   "name": "totp-cli",
   "version": "1.0.0",
-  "description": "A CLI app for TOTP (Time-based One-Time Password) generation",
+  "description": "A CLI app for TOTP (Time-based One-Time Password) generation with interactive Google Authenticator-style interface",
   "main": "dist/index.js",
   "bin": {
     "totp-cli": "./dist/cli.js"
   },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vpetar/totp-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vpetar/totp-cli/issues"
+  },
+  "homepage": "https://github.com/vpetar/totp-cli#readme",
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/cli.js",
     "dev": "tsc && node dist/cli.js",
     "clean": "rm -rf dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "echo \"No tests specified yet\" && exit 0",
+    "lint": "echo \"No linter configured yet\" && exit 0",
+    "prepare": "npm run build"
   },
   "keywords": [
     "totp",
@@ -20,8 +36,8 @@
     "2fa",
     "authentication"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "freeze.988@gmail.com",
+  "license": "MIT",
   "type": "commonjs",
   "engines": {
     "node": ">=14.0.0"
@@ -42,7 +58,6 @@
     "commander": "^14.0.0",
     "fs-extra": "^11.3.0",
     "inquirer": "^12.8.2",
-    "keytar": "^7.9.0",
     "otplib": "^12.0.1"
   }
 }
