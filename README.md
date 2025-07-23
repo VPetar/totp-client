@@ -176,9 +176,8 @@ src/
 
 - **Unique Encryption Keys**: Each installation generates a unique 32-byte encryption key
 - **AES-256-CTR Encryption**: Secrets are encrypted using AES-256-CTR before storage
-- **Secure Key Storage**: Encryption key stored in `~/.ent/key.bin` with 600 permissions (owner read/write only)
+- **Secure Key Storage**: Encryption key stored in `~/.totp-client/key.bin` with 600 permissions (owner read/write only)
 - **Configuration Security**: Configuration files stored in `~/.totp-client/` directory
-- **Keytar Integration**: Includes keytar for secure system keychain integration (fallback to encrypted file storage)
 
 ## Dependencies
 
@@ -198,4 +197,4 @@ src/
 
 ## License
 
-ISC
+MIT
