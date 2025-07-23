@@ -14,11 +14,23 @@ A command-line interface for generating Time-based One-Time Passwords (TOTP) for
 
 ## Installation
 
+### From NPM (Recommended)
+
+Install globally via NPM:
+
+```bash
+# Install globally
+npm install -g totp-cli
+
+# Run anywhere
+totp-cli
+```
+
 ### From Source
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/VPetar/totp-cli.git
 cd totp-cli
 
 # Install dependencies
@@ -38,11 +50,13 @@ npm link
 Launch the interactive interface that works just like Google Authenticator:
 
 ```bash
+# If installed globally via NPM
+totp-cli
+
+# If running from source
 npm start
 # or
 npm start -- interactive
-# or if installed globally
-totp-cli
 ```
 
 **Interactive Features:**
@@ -57,31 +71,49 @@ totp-cli
 
 Generate TOTP from a secret:
 ```bash
+# Global installation
+totp-cli generate "JBSWY3DPEHPK3PXP"
+# From source
 npm start -- generate "JBSWY3DPEHPK3PXP"
 ```
 
 Store a TOTP secret:
 ```bash
+# Global installation
+totp-cli add "github" "JBSWY3DPEHPK3PXP" --issuer "GitHub"
+# From source
 npm start -- add "github" "JBSWY3DPEHPK3PXP" --issuer "GitHub"
 ```
 
 List stored secrets:
 ```bash
+# Global installation
+totp-cli list
+# From source
 npm start -- list
 ```
 
 Generate TOTP from stored secret:
 ```bash
+# Global installation
+totp-cli get "github"
+# From source
 npm start -- get "github"
 ```
 
 Remove a stored secret:
 ```bash
+# Global installation
+totp-cli remove "github"
+# From source
 npm start -- remove "github"
 ```
 
 Get help:
 ```bash
+# Global installation
+totp-cli --help
+# From source
 npm start -- --help
 ```
 
@@ -155,14 +187,13 @@ src/
 - **clipboardy** - Cross-platform clipboard support
 - **otplib** - TOTP generation and verification
 - **fs-extra** - Enhanced file system operations
-- **keytar** - Secure system keychain access
 - **crypto** (built-in) - Cryptographic functions
 - **os** (built-in) - Operating system utilities
 
 ## Requirements
 
 - Node.js >= 14.0.0
-- Ubuntu or macOS
+- Linux or macOS (Might work on Windows, didn't test)
 
 ## License
 
