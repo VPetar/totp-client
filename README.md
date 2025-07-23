@@ -96,6 +96,7 @@ npm start -- --help
 - `add <name> <secret> [--issuer <issuer>]` - Add a new TOTP secret with a name
 - `list` - List all stored TOTP secrets with colored output
 - `get <name>` - Generate TOTP code for a stored secret
+- `watch <name>` - Watch a specific TOTP secret with live updates
 - `remove <name>` - Remove a stored TOTP secret
 
 ## Screenshots
@@ -140,9 +141,11 @@ src/
 
 ## Security
 
-- Secrets are encrypted using AES-256-CTR before storage
-- Configuration files are stored in `~/.totp-cli/`
-- The project includes keytar for secure system keychain integration (fallback to encrypted file storage)
+- **Unique Encryption Keys**: Each installation generates a unique 32-byte encryption key
+- **AES-256-CTR Encryption**: Secrets are encrypted using AES-256-CTR before storage
+- **Secure Key Storage**: Encryption key stored in `~/.totp-cli/key.bin` with 600 permissions (owner read/write only)
+- **Configuration Security**: Configuration files stored in `~/.totp-cli/` directory
+- **Keytar Integration**: Includes keytar for secure system keychain integration (fallback to encrypted file storage)
 
 ## Dependencies
 

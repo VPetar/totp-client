@@ -17,12 +17,50 @@ export interface TOTPEntry {
 export class StorageManager {
   private static readonly CONFIG_DIR = path.join(os.homedir(), '.totp-cli');
   private static readonly CONFIG_FILE = path.join(StorageManager.CONFIG_DIR, 'secrets.json');
+  private static readonly KEY_FILE = path.join(StorageManager.CONFIG_DIR, 'key.bin');
+  private static encryptionKey: Buffer | null = null;
 
   /**
    * Initialize storage directory
    */
   static async init(): Promise<void> {
     await fs.ensureDir(StorageManager.CONFIG_DIR);
+  }
+
+  /**
+   * Get or create the encryption key
+   */
+  private static async getEncryptionKey(): Promise<Buffer> {
+    // Return cached key if already loaded
+    if (StorageManager.encryptionKey) {
+      return StorageManager.encryptionKey;
+    }
+
+    await StorageManager.init();
+
+    // Try to read existing key file
+    if (await fs.pathExists(StorageManager.KEY_FILE)) {
+      try {
+        const keyData = await fs.readFile(StorageManager.KEY_FILE);
+        StorageManager.encryptionKey = keyData;
+        return keyData;
+      } catch (error) {
+        throw new Error('Failed to read encryption key file');
+      }
+    }
+
+    // Generate new random key (32 bytes for AES-256)
+    const newKey = crypto.randomBytes(32);
+    
+    try {
+      // Save the key to file with restricted permissions
+      await fs.writeFile(StorageManager.KEY_FILE, newKey, { mode: 0o600 });
+      StorageManager.encryptionKey = newKey;
+      return newKey;
+    } catch (error) {
+      console.error('Error saving encryption key:', error);
+      throw new Error('Failed to create encryption key file');
+    }
   }
 
   /**
@@ -34,7 +72,7 @@ export class StorageManager {
     const entries = await StorageManager.getAllSecrets();
     const newEntry: TOTPEntry = {
       name,
-      secret: StorageManager.encryptSecret(secret),
+      secret: await StorageManager.encryptSecret(secret),
       issuer,
       algorithm: 'SHA1'
     };
@@ -94,11 +132,11 @@ export class StorageManager {
   }
 
   /**
-   * Simple encryption for fallback storage (not recommended for production)
+   * Encryption for secure storage
    */
-  private static encryptSecret(secret: string): string {
+  private static async encryptSecret(secret: string): Promise<string> {
     const algorithm = 'aes-256-ctr';
-    const secretKey = crypto.createHash('sha256').update('totp-cli-secret-key').digest();
+    const secretKey = await StorageManager.getEncryptionKey();
     const iv = crypto.randomBytes(16);
     
     const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
@@ -108,11 +146,11 @@ export class StorageManager {
   }
 
   /**
-   * Simple decryption for fallback storage
+   * Decryption for secure storage
    */
-  private static decryptSecret(encryptedSecret: string): string {
+  private static async decryptSecret(encryptedSecret: string): Promise<string> {
     const algorithm = 'aes-256-ctr';
-    const secretKey = crypto.createHash('sha256').update('totp-cli-secret-key').digest();
+    const secretKey = await StorageManager.getEncryptionKey();
     
     const textParts = encryptedSecret.split(':');
     const iv = Buffer.from(textParts.shift()!, 'hex');
