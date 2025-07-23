@@ -61,6 +61,7 @@ npm start -- interactive
 
 **Interactive Features:**
 - 📱 **Live TOTP Display**: Real-time codes with countdown timer
+- 🔍 **Search & Filter**: Type to search and filter through your TOTP secrets instantly
 - 🎯 **Arrow Key Navigation**: Select secrets with up/down arrows  
 - 📊 **Progress Bar**: Visual countdown to next code refresh
 - 🔄 **Auto-refresh**: Codes update automatically every 30 seconds

@@ -3,6 +3,7 @@
  */
 
 import inquirer from 'inquirer';
+import search from '@inquirer/search';
 import chalk from 'chalk';
 import { default as clipboardy } from 'clipboardy';
 import { StorageManager } from './storage';
@@ -12,7 +13,7 @@ export class InteractiveUI {
   private static updateInterval: NodeJS.Timeout | null = null;
 
   /**
-   * Show interactive list of TOTP secrets for selection
+   * Show interactive list of TOTP secrets for selection with search functionality
    */
   static async showSecretSelector(): Promise<void> {
     const secrets = await StorageManager.getAllSecrets();
@@ -23,37 +24,53 @@ export class InteractiveUI {
       return;
     }
 
-    const choices = secrets.map((entry) => ({
+    // Create choices for search
+    const secretChoices = secrets.map((entry) => ({
       name: `${entry.name}${entry.issuer ? chalk.gray(` (${entry.issuer})`) : ''}`,
       value: entry.name,
-      short: entry.name
+      description: entry.issuer || 'No issuer'
     }));
 
-    choices.push(
-      { name: '─────────────', value: '__separator__', short: '' } as any,
+    // Add special options
+    const specialChoices = [
       {
         name: chalk.red('🚪 Exit'),
         value: '__exit__',
-        short: 'Exit'
+        description: 'Exit the application'
       }
-    );
+    ];
 
-    const { selectedSecret } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'selectedSecret',
-        message: chalk.cyan('🔐 Select a TOTP secret:'),
-        choices,
+    const allChoices = [...secretChoices, ...specialChoices];
+
+    try {
+      const selectedSecret = await search({
+        message: chalk.cyan('🔐 Search and select a TOTP secret:'),
+        source: async (input = '') => {
+          if (!input) {
+            return allChoices;
+          }
+          
+          // Filter choices based on input
+          return allChoices.filter(choice => 
+            choice.name.toLowerCase().includes(input.toLowerCase()) ||
+            choice.description.toLowerCase().includes(input.toLowerCase()) ||
+            choice.value.toLowerCase().includes(input.toLowerCase())
+          );
+        },
         pageSize: 10
-      }
-    ]);
+      });
 
-    if (selectedSecret === '__exit__' || selectedSecret === '__separator__') {
-      console.log(chalk.gray('Goodbye! 👋'));
+      if (selectedSecret === '__exit__') {
+        console.log(chalk.gray('Goodbye! 👋'));
+        return;
+      }
+
+      await InteractiveUI.showLiveTOTP(selectedSecret);
+    } catch (_error) {
+      // Handle Ctrl+C or other interruptions gracefully
+      console.log(chalk.gray('\nGoodbye! 👋'));
       return;
     }
-
-    await InteractiveUI.showLiveTOTP(selectedSecret);
   }
 
   /**
@@ -387,7 +404,7 @@ export class InteractiveUI {
   }
 
   /**
-   * Show interactive prompt for removing a secret
+   * Show interactive prompt for removing a secret with search functionality
    */
   static async showRemoveSecretPrompt(): Promise<void> {
     const secrets = await StorageManager.getAllSecrets();
@@ -405,29 +422,49 @@ export class InteractiveUI {
       return;
     }
 
-    const choices = secrets.map(entry => ({
+    // Create choices for search
+    const secretChoices = secrets.map(entry => ({
       name: `${entry.name}${entry.issuer ? chalk.gray(` (${entry.issuer})`) : ''}`,
-      value: entry.name
+      value: entry.name,
+      description: entry.issuer || 'No issuer'
     }));
 
-    choices.push(
-      { name: '─────────────', value: '__separator__' } as any,
+    // Add back option
+    const allChoices = [
+      ...secretChoices,
       {
         name: chalk.gray('🔙 Back to Main Menu'),
-        value: '__back__'
+        value: '__back__',
+        description: 'Return to main menu'
       }
-    );
+    ];
 
-    const { secretToRemove } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'secretToRemove',
-        message: chalk.red('🗑️  Select secret to remove:'),
-        choices
-      }
-    ]);
+    let secretToRemove: string;
+    
+    try {
+      secretToRemove = await search({
+        message: chalk.red('🗑️  Search and select secret to remove:'),
+        source: async (input = '') => {
+          if (!input) {
+            return allChoices;
+          }
+          
+          // Filter choices based on input
+          return allChoices.filter(choice => 
+            choice.name.toLowerCase().includes(input.toLowerCase()) ||
+            choice.description.toLowerCase().includes(input.toLowerCase()) ||
+            choice.value.toLowerCase().includes(input.toLowerCase())
+          );
+        },
+        pageSize: 10
+      });
+    } catch (_error) {
+      // Handle Ctrl+C or other interruptions gracefully
+      await InteractiveUI.showMainMenu();
+      return;
+    }
 
-    if (secretToRemove === '__back__' || secretToRemove === '__separator__') {
+    if (secretToRemove === '__back__') {
       await InteractiveUI.showMainMenu();
       return;
     }
