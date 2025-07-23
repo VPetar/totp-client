@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-07-23
+
+### Added
+- Search and filter functionality for TOTP secrets
+- Real-time filtering as you type in secret selector
+- Search works across secret names, issuers, and descriptions
+- Enhanced remove secret prompt with search functionality
+
+### Changed
+- Upgraded interactive secret selection to use modern `@inquirer/search`
+- Improved user experience when navigating large lists of TOTP secrets
+
+### Dependencies
+- Added `@inquirer/search@^3.0.17` for enhanced search functionality
+
 ## [1.0.0] - 2025-07-23
 
 ### Added
