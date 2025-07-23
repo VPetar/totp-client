@@ -1,3 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 # Logs
 logs
 *.log
@@ -137,3 +151,6 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# TOTP CLI config (contains secrets)
+.totp-cli/

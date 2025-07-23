@@ -1,16 +1,44 @@
 {
-  "name": "totp-client",
+  "name": "totp-cli",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A CLI app for TOTP (Time-based One-Time Password) generation",
+  "main": "dist/index.js",
+  "bin": {
+    "totp-cli": "./dist/cli.js"
+  },
   "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node dist/cli.js",
+    "dev": "tsc && node dist/cli.js",
+    "clean": "rm -rf dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "totp",
+    "otp",
+    "cli",
+    "2fa",
+    "authentication"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
   "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^24.1.0",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "commander": "^14.0.0",
+    "fs-extra": "^11.3.0",
+    "keytar": "^7.9.0",
+    "otplib": "^12.0.1"
   }
 }
