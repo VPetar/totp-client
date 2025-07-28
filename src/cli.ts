@@ -11,6 +11,31 @@ import { StorageManager } from './storage';
 import { InteractiveUI } from './interactive';
 import chalk from 'chalk';
 
+// Global exit handler to ensure goodbye message everywhere
+function gracefulExit(code: number = 0) {
+  console.log(chalk.gray('\nGoodbye! 👋'));
+  process.exit(code);
+}
+
+// Global error handlers
+process.on('SIGINT', () => {
+  gracefulExit(0);
+});
+
+process.on('SIGTERM', () => {
+  gracefulExit(0);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error(chalk.red('\n❌ Unexpected error:'), error.message);
+  gracefulExit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error(chalk.red('\n❌ Unhandled promise rejection:'), reason);
+  gracefulExit(1);
+});
+
 // Set up the CLI program
 const program = new Command();
 
@@ -29,7 +54,7 @@ program
       await InteractiveUI.showMainMenu();
     } catch (error) {
       console.error(chalk.red('Error in interactive mode:'), error);
-      process.exit(1);
+      gracefulExit(1);
     }
   });
 
@@ -45,7 +70,7 @@ program
       console.log(chalk.blue(`⏱️  Time remaining: ${timeRemaining}s`));
     } catch (error) {
       console.error(chalk.red('❌ Error generating TOTP:'), error);
-      process.exit(1);
+      gracefulExit(1);
     }
   });
 
@@ -60,7 +85,7 @@ program
       console.log(chalk.green(`✅ Successfully added TOTP secret for: ${chalk.bold(name)}`));
     } catch (error) {
       console.error(chalk.red('❌ Error storing TOTP secret:'), error);
-      process.exit(1);
+      gracefulExit(1);
     }
   });
 
@@ -87,7 +112,7 @@ program
       console.log(chalk.gray('\n💡 Use "interactive" mode for live TOTP codes!'));
     } catch (error) {
       console.error(chalk.red('❌ Error listing TOTP secrets:'), error);
-      process.exit(1);
+      gracefulExit(1);
     }
   });
 
@@ -101,7 +126,8 @@ program
       if (!secret) {
         console.error(chalk.red(`❌ TOTP secret not found: ${name}`));
         console.log(chalk.gray('💡 Use "list" command to see available secrets.'));
-        process.exit(1);
+        gracefulExit(1);
+        return;
       }
       
       const code = TOTPManager.generateTOTP(secret);
@@ -111,7 +137,7 @@ program
       console.log(chalk.gray('💡 Use "watch <name>" for live updates!'));
     } catch (error) {
       console.error(chalk.red('❌ Error generating TOTP:'), error);
-      process.exit(1);
+      gracefulExit(1);
     }
   });
 
@@ -125,13 +151,14 @@ program
       if (!secret) {
         console.error(chalk.red(`❌ TOTP secret not found: ${name}`));
         console.log(chalk.gray('💡 Use "list" command to see available secrets.'));
-        process.exit(1);
+        gracefulExit(1);
+        return;
       }
       
       await InteractiveUI.showLiveTOTP(name);
     } catch (error) {
       console.error(chalk.red('❌ Error watching TOTP:'), error);
-      process.exit(1);
+      gracefulExit(1);
     }
   });
 
@@ -146,11 +173,11 @@ program
         console.log(chalk.green(`✅ Successfully removed TOTP secret: ${chalk.bold(name)}`));
       } else {
         console.error(chalk.red(`❌ TOTP secret not found: ${name}`));
-        process.exit(1);
+        gracefulExit(1);
       }
     } catch (error) {
       console.error(chalk.red('❌ Error removing TOTP secret:'), error);
-      process.exit(1);
+      gracefulExit(1);
     }
   });
 
@@ -161,8 +188,7 @@ program.action(async () => {
     console.log(chalk.gray('Launching interactive mode...\n'));
     await InteractiveUI.showMainMenu();
   } catch (error) {
-    console.error(chalk.red('Error launching interactive mode:'), error);
-    process.exit(1);
+    gracefulExit(1);
   }
 });
 

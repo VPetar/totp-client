@@ -9,6 +9,11 @@ import { default as clipboardy } from 'clipboardy';
 import { StorageManager } from './storage';
 import { TOTPManager } from './totpManager';
 
+// Global goodbye function to ensure consistent messaging
+function showGoodbyeMessage(message: string = 'Goodbye! 👋') {
+  console.log(chalk.gray(`\n${message}`));
+}
+
 export class InteractiveUI {
   private static updateInterval: NodeJS.Timeout | null = null;
 
@@ -61,14 +66,18 @@ export class InteractiveUI {
       });
 
       if (selectedSecret === '__exit__') {
-        console.log(chalk.gray('Goodbye! 👋'));
-        return;
+        showGoodbyeMessage();
+        process.exit(0);
       }
 
       await InteractiveUI.showLiveTOTP(selectedSecret);
-    } catch (_error) {
+    } catch (error: any) {
       // Handle Ctrl+C or other interruptions gracefully
-      console.log(chalk.gray('\nGoodbye! 👋'));
+      // Only show error details if it's not a user cancellation
+      if (error?.message && !error.message.includes('cancelled') && !error.message.includes('interrupted')) {
+        console.error(chalk.red('❌ Error:'), error.message);
+      }
+      await InteractiveUI.showMainMenu();
       return;
     }
   }
@@ -145,12 +154,11 @@ export class InteractiveUI {
       if (data[0] === 3) {
         isRunning = false;
         InteractiveUI.stopLiveDisplay();
-        console.log(chalk.yellow('\n👋 Returning to main menu...'));
         
-        // Show the selector again
+        // Return to main menu instead of secret selector
         setTimeout(async () => {
-          await InteractiveUI.showSecretSelector();
-        }, 500);
+          await InteractiveUI.showMainMenu();
+        }, 100);
         return;
       }
       
@@ -181,15 +189,6 @@ export class InteractiveUI {
       }
       updateDisplay();
     }, 1000);
-
-    // Handle process termination gracefully
-    const exitHandler = () => {
-      isRunning = false;
-      InteractiveUI.stopLiveDisplay();
-    };
-
-    process.once('SIGINT', exitHandler);
-    process.once('SIGTERM', exitHandler);
   }
 
   /**
@@ -212,8 +211,6 @@ export class InteractiveUI {
     
     // Remove all event listeners
     process.stdin.removeAllListeners('data');
-    process.removeAllListeners('SIGINT');
-    process.removeAllListeners('SIGTERM');
   }
 
   /**
@@ -244,67 +241,79 @@ export class InteractiveUI {
    * Show interactive prompt for adding a new secret
    */
   static async showAddSecretPrompt(): Promise<void> {
-    console.log(chalk.cyan.bold('🔐 Add New TOTP Secret\n'));
-    
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: chalk.blue('📝 Enter a name for this secret:'),
-        validate: (input: string) => {
-          if (!input.trim()) {
-            return chalk.red('Please enter a valid name');
-          }
-          return true;
-        }
-      },
-      {
-        type: 'input',
-        name: 'secret',
-        message: chalk.blue('🔑 Enter the TOTP secret:'),
-        validate: (input: string) => {
-          if (!input.trim()) {
-            return chalk.red('Please enter a valid secret');
-          }
-          // Basic validation for base32 format
-          if (!/^[A-Z2-7]+=*$/i.test(input.trim())) {
-            return chalk.yellow('Warning: This doesn\'t look like a valid base32 secret');
-          }
-          return true;
-        }
-      },
-      {
-        type: 'input',
-        name: 'issuer',
-        message: chalk.blue('🏢 Enter issuer (optional):'),
-      }
-    ]);
-
     try {
-      await StorageManager.storeSecret(
-        answers.name.trim(),
-        answers.secret.trim(),
-        answers.issuer.trim() || undefined
-      );
+      console.log(chalk.cyan.bold('🔐 Add New TOTP Secret\n'));
       
-      console.log(chalk.green(`✅ Successfully added TOTP secret for: ${answers.name}`));
-      
-      // Ask if they want to test it
-      const { testNow } = await inquirer.prompt([
+      const answers = await inquirer.prompt([
         {
-          type: 'confirm',
-          name: 'testNow',
-          message: chalk.cyan('🧪 Would you like to test this secret now?'),
-          default: true
+          type: 'input',
+          name: 'name',
+          message: chalk.blue('📝 Enter a name for this secret:'),
+          validate: (input: string) => {
+            if (!input.trim()) {
+              return chalk.red('Please enter a valid name');
+            }
+            return true;
+          }
+        },
+        {
+          type: 'input',
+          name: 'secret',
+          message: chalk.blue('🔑 Enter the TOTP secret:'),
+          validate: (input: string) => {
+            if (!input.trim()) {
+              return chalk.red('Please enter a valid secret');
+            }
+            // Basic validation for base32 format
+            if (!/^[A-Z2-7]+=*$/i.test(input.trim())) {
+              return chalk.yellow('Warning: This doesn\'t look like a valid base32 secret');
+            }
+            return true;
+          }
+        },
+        {
+          type: 'input',
+          name: 'issuer',
+          message: chalk.blue('🏢 Enter issuer (optional):'),
         }
       ]);
 
-      if (testNow) {
-        await InteractiveUI.showLiveTOTP(answers.name.trim());
+      try {
+        await StorageManager.storeSecret(
+          answers.name.trim(),
+          answers.secret.trim(),
+          answers.issuer.trim() || undefined
+        );
+        
+        console.log(chalk.green(`✅ Successfully added TOTP secret for: ${answers.name}`));
+        
+        // Ask if they want to test it
+        const { testNow } = await inquirer.prompt([
+          {
+            type: 'confirm',
+            name: 'testNow',
+            message: chalk.cyan('🧪 Would you like to test this secret now?'),
+            default: true
+          }
+        ]);
+
+        if (testNow) {
+          await InteractiveUI.showLiveTOTP(answers.name.trim());
+        }
+        
+      } catch (error) {
+        console.log(chalk.red('❌ Error storing TOTP secret:'), error);
       }
       
-    } catch (error) {
-      console.log(chalk.red('❌ Error storing TOTP secret:'), error);
+      await InteractiveUI.showMainMenu();
+    } catch (error: any) {
+      // Handle Ctrl+C or other interruptions gracefully
+      // Only show error details if it's not a user cancellation
+      if (error?.message && !error.message.includes('cancelled') && !error.message.includes('interrupted')) {
+        console.error(chalk.red('❌ Error:'), error.message);
+      }
+      await InteractiveUI.showMainMenu();
+      return;
     }
   }
 
@@ -312,62 +321,72 @@ export class InteractiveUI {
    * Show main menu
    */
   static async showMainMenu(): Promise<void> {
-    console.clear();
-    console.log(chalk.cyan.bold('🔐 TOTP CLI - Interactive Mode\n'));
+    try {
+      console.clear();
+      console.log(chalk.cyan.bold('🔐 TOTP CLI - Interactive Mode\n'));
 
-    const { action } = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'action',
-        message: chalk.blue('What would you like to do?'),
-        choices: [
-          {
-            name: chalk.green('📱 View TOTP Codes (Live)'),
-            value: 'view',
-            short: 'View Codes'
-          },
-          {
-            name: chalk.yellow('➕ Add New Secret'),
-            value: 'add',
-            short: 'Add Secret'
-          },
-          {
-            name: chalk.blue('📋 List All Secrets'),
-            value: 'list',
-            short: 'List Secrets'
-          },
-          {
-            name: chalk.red('🗑️  Remove Secret'),
-            value: 'remove',
-            short: 'Remove Secret'
-          },
-          new inquirer.Separator(),
-          {
-            name: chalk.gray('🚪 Exit'),
-            value: 'exit',
-            short: 'Exit'
-          }
-        ]
+      const { action } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'action',
+          message: chalk.blue('What would you like to do?'),
+          choices: [
+            {
+              name: chalk.green('📱 View TOTP Codes (Live)'),
+              value: 'view',
+              short: 'View Codes'
+            },
+            {
+              name: chalk.yellow('➕ Add New Secret'),
+              value: 'add',
+              short: 'Add Secret'
+            },
+            {
+              name: chalk.blue('📋 List All Secrets'),
+              value: 'list',
+              short: 'List Secrets'
+            },
+            {
+              name: chalk.red('🗑️  Remove Secret'),
+              value: 'remove',
+              short: 'Remove Secret'
+            },
+            new inquirer.Separator(),
+            {
+              name: chalk.gray('🚪 Exit'),
+              value: 'exit',
+              short: 'Exit'
+            }
+          ]
+        }
+      ]);
+
+      switch (action) {
+        case 'view':
+          await InteractiveUI.showSecretSelector();
+          break;
+        case 'add':
+          await InteractiveUI.showAddSecretPrompt();
+          break;
+        case 'list':
+          await InteractiveUI.showSecretsList();
+          break;
+        case 'remove':
+          await InteractiveUI.showRemoveSecretPrompt();
+          break;
+        case 'exit':
+          showGoodbyeMessage();
+          process.exit(0);
+          break;
       }
-    ]);
-
-    switch (action) {
-      case 'view':
-        await InteractiveUI.showSecretSelector();
-        break;
-      case 'add':
-        await InteractiveUI.showAddSecretPrompt();
-        break;
-      case 'list':
-        await InteractiveUI.showSecretsList();
-        break;
-      case 'remove':
-        await InteractiveUI.showRemoveSecretPrompt();
-        break;
-      case 'exit':
-        console.log(chalk.gray('Goodbye! 👋'));
-        process.exit(0);
-        break;
+    } catch (error: any) {
+      // Handle Ctrl+C or other interruptions gracefully at main menu level
+      // This should exit the app since we're at the top level
+      if (error?.message && !error.message.includes('cancelled') && !error.message.includes('interrupted')) {
+        console.error(chalk.red('❌ Error:'), error.message);
+      }
+      showGoodbyeMessage();
+      process.exit(0);
     }
   }
 
@@ -375,35 +394,43 @@ export class InteractiveUI {
    * Show formatted list of all secrets
    */
   static async showSecretsList(): Promise<void> {
-    const secrets = await StorageManager.getAllSecrets();
-    
-    console.clear();
-    console.log(chalk.cyan.bold('📋 Stored TOTP Secrets\n'));
-    
-    if (secrets.length === 0) {
-      console.log(chalk.yellow('📭 No TOTP secrets found.'));
-    } else {
-      secrets.forEach((entry, index) => {
-        const number = chalk.gray(`${index + 1}.`);
-        const name = chalk.green.bold(entry.name);
-        const issuer = entry.issuer ? chalk.gray(` (${entry.issuer})`) : '';
-        console.log(`${number} ${name}${issuer}`);
-      });
-    }
-
-    console.log(''); // Empty line
-    await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'continue',
-        message: chalk.gray('Press Enter to return to main menu...'),
+    try {
+      const secrets = await StorageManager.getAllSecrets();
+      
+      console.clear();
+      console.log(chalk.cyan.bold('📋 Stored TOTP Secrets\n'));
+      
+      if (secrets.length === 0) {
+        console.log(chalk.yellow('📭 No TOTP secrets found.'));
+      } else {
+        secrets.forEach((entry, index) => {
+          const number = chalk.gray(`${index + 1}.`);
+          const name = chalk.green.bold(entry.name);
+          const issuer = entry.issuer ? chalk.gray(` (${entry.issuer})`) : '';
+          console.log(`${number} ${name}${issuer}`);
+        });
       }
-    ]);
 
-    await InteractiveUI.showMainMenu();
-  }
+      console.log(''); // Empty line
+      await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'continue',
+          message: chalk.gray('Press Enter to return to main menu...'),
+        }
+      ]);
 
-  /**
+      await InteractiveUI.showMainMenu();
+    } catch (error: any) {
+      // Handle Ctrl+C or other interruptions gracefully
+      // Only show error details if it's not a user cancellation
+      if (error?.message && !error.message.includes('cancelled') && !error.message.includes('interrupted')) {
+        console.error(chalk.red('❌ Error:'), error.message);
+      }
+      await InteractiveUI.showMainMenu();
+      return;
+    }
+  }  /**
    * Show interactive prompt for removing a secret with search functionality
    */
   static async showRemoveSecretPrompt(): Promise<void> {
@@ -458,8 +485,12 @@ export class InteractiveUI {
         },
         pageSize: 10
       });
-    } catch (_error) {
+    } catch (error: any) {
       // Handle Ctrl+C or other interruptions gracefully
+      // Only show error details if it's not a user cancellation
+      if (error?.message && !error.message.includes('cancelled') && !error.message.includes('interrupted')) {
+        console.error(chalk.red('❌ Error:'), error.message);
+      }
       await InteractiveUI.showMainMenu();
       return;
     }
